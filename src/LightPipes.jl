@@ -35,6 +35,45 @@ function LPCircAperture(rad, xc, yc, U::LPField)
     end
     return U
 end
+"""  Bilinear interpolation on 4 points in square grid """
+function Interpol4(coordX::Float64, coordY::Float64, v00::ComplexF64, v01::ComplexF64, v10::ComplexF64, v11::ComplexF64 )
+    cx= 1.0 - coordX
+    cy = 1.0 - coordY
+    f = cx * cy * v00 + coordX * cy * v10 + cx * coordY * v01 + coordX * coordY * v11
+end   
+""" Interpolation of the field into a new grid """
+function LPInterpol(new_size, new_dim, x_shift , y_shift, U::LPField)
+    U1 = Matrix{ComplexF64}(undef, new_dim, new_dim)
+    dx = U.size /(U.dim - 1.0)
+    dx1 = new_size/(new_dim - 1.0)
+    xc = x_shift
+    yc = y_shift
+    for j in 1:new_dim
+        y1 = (j - new_dim / 2.0) * dx1 + yc
+        j1 = floor(y1/dx) 
+        yy=  y1/dx - j1  
+        j1 +=  U.dim / 2 
+        j2 = j1 + 1
+        j1 =Int(round(j1))
+        j2=j1 + 1
+        for i in 1:new_dim
+            x1 = (i - new_dim / 2.0) * dx1 + xc
+            i1 =floor(x1/dx)
+            xx = x1/dx - i1  
+            i1  +=  U.dim / 2
+            i2 = i1 + 1
+            i1 =Int(round(i1))
+            i2=i1 + 1
+            if 1 <= i1  <= (U.dim - 1) && 1 <= j1  <= (U.dim - 1) 
+                #println(i1," ",j1)
+                U1[i,j] = Interpol4(xx, yy, U.field[i1,j1], U.field[i1,j2], U.field[i2,j1], U.field[i2,j2])
+            else
+                U1[i,j] = 0.0 + 0.0im
+            end
+        end
+    end
+    return LPField(U1, new_size, U.lambda, new_dim, U.curv)
+end
 
 function LPFFT(U::LPField)
     U.field = fftshift(U.field)
@@ -79,6 +118,8 @@ function LPMix(U::LPField , U1::LPField)
     end
 end
 
+""" Introducing tilts in the wavefront 
+ tiltx means tilt in the direction x,  around Y axis  """
 function LPTilt(tiltx , tilty, U::LPField)
     wave_num =2.0 * pi / U.lambda
     dx = U.size /(U.dim - 1.0)
@@ -98,15 +139,25 @@ function LPCopy(U::LPField)
     return U1
 end
 
-U = LPBegin(0.2, 1e-6, 512)
+U = LPBegin(0.3, 1e-6, 2000)
 #U1 = LPBegin(0.1, 1e-6, 512)
-U1 = LPCopy(U)
+#U1 = LPCopy(U)
 U = LPCircAperture(0.04, 0.00, 0.00, U)
-U1 = LPCircAperture(0.05, 0.0, 0.00, U1)
-U1 = LPTilt(5e-5, 5e-5 , U1)
-U=LPMix(U , U1)
- U = LPForvard(0.9*0.02^2/1e-6 , U) 
-display(heatmap((abs.(U.field)).^2))
+#U1 = LPCircAperture(0.05, 0.0, 0.00, U1)
+U = LPTilt(0e-3, 0e-3 , U)
+#U=LPMix(U , U1)
+ U = LPForvard(20.0, U) 
+ U1= LPInterpol(0.4, 2100, 0.1, -0.0, U)
+ #U = LPForvard(10.0 , U1) 
+ #U1= LPInterpol(0.3, 2000, -0.1, 0.02, U)
+ #=
+ for ii in 1:30
+    global U1= LPInterpol(0.3,299, 0., -0.0, U)
+    global U= LPInterpol(2.3,2001, 0.0, -0U1= LPInterpol(0.3,400, 0., -0.0, U).0, U1)
+ end
+ =#
+ 
+display(heatmap((abs.(U1.field)).^2))
 
 
 #@time U = LPFFT(U)
