@@ -107,7 +107,21 @@ function LPForvard(z::Float64,U::LPField)
     U = LPIFFT(U)
     return U
 end
-
+""" Lens function """
+function LPLens(ff::Float64,U::LPField)
+    wave_num =2.0 * pi / U.lambda
+    dx = U.size /(U.dim - 1.0)
+    nc = U.dim/2+1
+    for j in 1:U.dim
+        y = (j - nc)*dx
+        for i in 1:U.dim
+            x = (i - nc)*dx
+            serv = exp((0.0 - 1.0im)* (x*x + y*y) *  wave_num/2.0/ff)
+            U.field[i,j] = U.field[i,j] * serv
+        end
+    end
+    return U
+end
 
 function LPMix(U::LPField , U1::LPField)
     if U.size == U1.size && U.dim == U1.dim 
@@ -127,7 +141,7 @@ function LPTilt(tiltx , tilty, U::LPField)
         y = (j - U.dim/2.0)*dx
         for i in 1:U.dim
             x = (i - U.dim/2.0)*dx
-            serv = exp((0.0 + 1.0im)* (tiltx * x + tilty * y) *  wave_num)
+            serv = exp((0.0 - 1.0im)* (tiltx * x + tilty * y) *  wave_num)
             U.field[i,j] = U.field[i,j] * serv
         end
     end
@@ -139,15 +153,15 @@ function LPCopy(U::LPField)
     return U1
 end
 
-U = LPBegin(0.3, 1e-6, 2000)
+U = LPBegin(0.05, 1e-6, 1024)
 #U1 = LPBegin(0.1, 1e-6, 512)
 #U1 = LPCopy(U)
-U = LPCircAperture(0.04, 0.00, 0.00, U)
+U = LPCircAperture(0.004, 0.00, 0.00, U)
 #U1 = LPCircAperture(0.05, 0.0, 0.00, U1)
-U = LPTilt(0e-3, 0e-3 , U)
+U = LPLens(5.0, U)
 #U=LPMix(U , U1)
- U = LPForvard(20.0, U) 
- U1= LPInterpol(0.4, 2100, 0.1, -0.0, U)
+ U = LPForvard(5.0, U) 
+ #U1= LPInterpol(0.4, 2100, 0.1, -0.0, U)
  #U = LPForvard(10.0 , U1) 
  #U1= LPInterpol(0.3, 2000, -0.1, 0.02, U)
  #=
@@ -157,7 +171,7 @@ U = LPTilt(0e-3, 0e-3 , U)
  end
  =#
  
-display(heatmap((abs.(U1.field)).^2))
+display(heatmap((abs.(U.field)).^2))
 
 
 #@time U = LPFFT(U)
