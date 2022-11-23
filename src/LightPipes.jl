@@ -209,12 +209,3 @@ function LPBegind(size,lambda,dim)
     curv = 0.0
     return LPFieldd(field,size,lambda,dim,curv) 
 end
-
-function LPFFT(U::LPFieldd)
-    U1= fftshift(U.field)
-    U1 = fft(U1)
-    U1 = fftshift(U1)
-    U.field .= (U1) # this is the trick to update a mutable vector !!!
-    return U
-end
-=#
