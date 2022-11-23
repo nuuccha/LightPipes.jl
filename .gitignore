@@ -1,0 +1,5 @@
+/.vscode/
+# Why we should ignore Manifest.toml https://discourse.julialang.org/t/does-manifest-toml-belong-in-the-repository/12029/2
+/Manifest.toml
+/dev/
+docs/build/
