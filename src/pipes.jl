@@ -270,3 +270,19 @@ function LPCopy(U::LPField)
     U1 = deepcopy(U)
     return U1
 end
+
+""" Lens function """
+function LPLens(ff::Float64,U::LPField)
+    wave_num =2.0 * pi / U.lambda
+    dx = U.size /(U.dim - 1.0)
+    nc = U.dim/2+1
+    for j in 1:U.dim
+        y = (j - nc)*dx
+        for i in 1:U.dim
+            x = (i - nc)*dx
+            serv = exp((0.0 - 1.0im)* (x*x + y*y) *  wave_num/2.0/ff)
+            U.field[i,j] = U.field[i,j] * serv
+        end
+    end
+    return U
+end
