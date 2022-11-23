@@ -1,6 +1,6 @@
 using FFTW
 using Plots
-using LighPipes
+using LightPipes
 @time U = LPBegin(0.1, 1e-6, 2000)
 #U1 = LPBegin(0.1, 1e-6, 512)
 #U1 = LPCopy(U)
@@ -19,4 +19,4 @@ U = LPRotate(180,U)
 
 U= LPInterpol(0.1, 500, 0.0, -0.0, U)
 intens = (abs.(U.field)) .* (abs.(U.field))
-display(heatmap(intens))
+display(heatmap(intens, aspect_ratio=:equal, size = size(U.field)))
