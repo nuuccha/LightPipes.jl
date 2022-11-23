@@ -153,13 +153,15 @@ function LPCopy(U::LPField)
     return U1
 end
 
-U = LPBegin(0.05, 1e-6, 1024)
+U = LPBegin(0.05, 1e-6, 4024)
 #U1 = LPBegin(0.1, 1e-6, 512)
 #U1 = LPCopy(U)
 U = LPCircAperture(0.004, 0.00, 0.00, U)
 #U1 = LPCircAperture(0.05, 0.0, 0.00, U1)
 U = LPLens(5.0, U)
+U=LPTilt(0.0,1e-5,U)
 #U=LPMix(U , U1)
+
  U = LPForvard(5.0, U) 
  #U1= LPInterpol(0.4, 2100, 0.1, -0.0, U)
  #U = LPForvard(10.0 , U1) 
@@ -170,8 +172,8 @@ U = LPLens(5.0, U)
     global U= LPInterpol(2.3,2001, 0.0, -0U1= LPInterpol(0.3,400, 0., -0.0, U).0, U1)
  end
  =#
- 
-display(heatmap((abs.(U.field)).^2))
+ U= LPInterpol(0.01, 500, 0., -0.0, U) 
+display(heatmap((abs.(U.field)).^1.0))
 
 
 #@time U = LPFFT(U)
